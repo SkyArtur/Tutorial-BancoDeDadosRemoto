@@ -1,7 +1,7 @@
 # Configurando acesso remoto para banco de dados
 
 Requisitos:
-- Sistema Operacional Linux Ubuntu:
+- Linux Ubuntu:
   - [WSL - Windows Subsystem for Linux](https://learn.microsoft.com/pt-br/windows/wsl/install#install-wsl-command)
   - [VirtualBox](https://www.virtualbox.org/wiki/Downloads) + [ISO Ubuntu Server](https://ubuntu.com/download/server)
 - SGBD - Sistema de Gerenciamento de Banco de Dados
@@ -39,7 +39,7 @@ sudo apt update && sudo apt upgrade -y
 ```shell
 sudo apt install postgresql postgresql-contrib mysql-server
 ```
-### PostgreSQL
+# PostgreSQL
 - #### Iniciando o service:
 ```shell
 sudo service postgresql start
@@ -110,5 +110,71 @@ ip addr show eth0 | grep inet | awk '{print $2;}' | sed 's/\/.*$//'
 ```shell
 ip addr show enp0s3 | grep inet | awk '{print $2;}' | sed 's/\/.*$//'
 ```
+# Mysql
+- #### Iniciando o service:
+```shell
+sudo systemctl start mysql.service
+```
 
+- #### Configurando o usuário root e a instalação segura do mysql:
+```shell
+sudo mysql
+```
+Alterando a senha do usuário root:
+```shell
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'password';
+```
 
+Saindo do shell do MySQL:
+```shell
+mysql> exit
+```
+
+- #### Rodando o script de segurança:
+```shell
+sudo mysql_secure_installation
+```
+Nesta etapa é interessante que se tenha a atenção para alterar a opção que permite que o usuário root realize
+conexões remotas. Para as demais, pode-se ignorar:
+
+```shell
+Normally, root should only be allowed to connect from
+'localhost'. This ensures that someone cannot guess at
+the root password from the network.
+
+Disallow root login remotely? (Press y|Y for Yes, any other key for No) : y
+Success.
+```
+- #### Retornando o método de autenticação padrão do usuário root:
+```shell
+mysql -u root -p
+```
+Alterando o método de autenticação do root:
+```shell
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH auth_socket;
+```
+Criando um usuário para utilização:
+```shell
+mysql> CREATE USER 'usuario'@'%' IDENTIFIED BY 'password';
+
+mysql> GRANT ALL PRIVILEGES ON *.* TO 'usuario'@'%' WITH GRANT OPTION;
+
+mysql> FLUSH PRIVILEGES;
+
+mysql> exit
+```
+- #### Alterando o arquivo mysqld.cnf:
+```shell
+sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+```
+*Edite bind-address para **0.0.0.0**.*
+```shell
+# Instead of skip-networking the default is now to listen only on
+# localhost which is more compatible and is not less secure.
+bind-address            = 0.0.0.0
+mysqlx-bind-address     = 127.0.0.1
+```
+#### - Reinicie o serviço:
+```shell
+sudo systemctl restart mysql.service
+```
