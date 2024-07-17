@@ -178,3 +178,78 @@ mysqlx-bind-address     = 127.0.0.1
 ```shell
 sudo systemctl restart mysql.service
 ```
+# Docker
+Utilizando uma VM para servir os bancos de dados a partir de containers Docker:
+- [Instalar o Docker](https://docs.docker.com/engine/install/ubuntu/)
+
+## Container PostgreSQL
+- Docker Compose:
+```yaml
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:16.1
+    restart: always
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=212223
+      - TZ=America/Sao_Paulo
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgData:/var/lib/postgresql/data/
+volumes:
+  pgData:
+    name: 'pgData'
+  ```
+```shell
+docker compose up -d
+```
+- Comando:
+```shell
+docker run --name postgres -e POSTGRES_PASSWORD='212223' -d -p 5432:5432 -v pgData:/var/lib/postgresql/data postgres:16.3
+```
+
+- Executar bash do container:
+```shell
+docker exec -it postgres bash
+```
+- Atualizando a distro do container:
+```shell
+root@be1fa4b5e7b7:/# echo "host all all 0.0.0.0/0 md5" >> /var/lib/postgresql/data/pg_hba.conf
+```
+- Reiniciando o container:
+```shell
+docker restart postgres
+```
+- Abrindo a porta 5432:
+```shell
+sudo ufw allow 5432/tcp
+```
+
+## Container MySQL
+- Comando:
+```shell
+docker run --name mysql -e MYSQL_ROOT_PASSWORD='212223' -d -p 3306:3306 -v myData:/var/lib/mysql mysql:8.4
+```
+- Docker Compose:
+```yaml
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: mysql
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=212223
+    ports:
+      - "3306:3306"
+    volumes:
+      - myData:/var/lib/mysql/
+volumes:
+  myData:
+    name: 'myData'
+  ```
+```shell
+docker compose up -d
+```
